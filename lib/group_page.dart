@@ -8,13 +8,16 @@ class GroupPage extends StatefulWidget {
   final String name;
   final String ip;
   final String port;
-  final String num;
-  const GroupPage(
+  final String senderNum;
+  final String targetNum;
+
+  GroupPage(
       {Key? key,
       required this.name,
       required this.ip,
       required this.port,
-      required this.num})
+      required this.senderNum,
+      required this.targetNum})
       : super(key: key);
 
   @override
@@ -22,13 +25,13 @@ class GroupPage extends StatefulWidget {
 }
 
 class _GroupPageState extends State<GroupPage> {
-  List<String> listMsg = [];
   TextEditingController _msgController = TextEditingController();
   TextEditingController _conectecController = TextEditingController();
 
-  Socket? _socket; //definimos socket
+  Socket? _socket;
   String message = ""; //definimos mensaje
   bool isConnecting = false; //no esta conectado
+  List<String> listMsg = [];
 
   @override
   void initState() {
@@ -38,24 +41,43 @@ class _GroupPageState extends State<GroupPage> {
       //refesca el estado de las variables
       _conectecController.text = "not conected";
     });
+
+    connectServer();
   }
 
   Future<void> connectServer() async {
-    _socket!.listen((MessageEvent) {
-      //crea el hilo para decodificar los mensajes del celular
-      setState(() {
-        listMsg.add(utf8.decode(MessageEvent));
-        print(listMsg); //muestra por consola
+    try {
+      print("Connecting...");
+      _socket = await Socket.connect(widget.ip, 1234); //funciona
+      print("Connected ...");
+
+      _socket!.listen((MessageEvent) {
+        String rawString = utf8.decode(MessageEvent);
+        Map<String, dynamic> messageMap = jsonDecode(rawString);
+        Message msg = Message.fromJson(messageMap);
+
+        setState(() {
+          listMsg.add(msg.data);
+          print(msg.data);
+        });
+        
+
+        print("escuchando");
       });
-    });
+    } catch (e) {
+      print(e);
+      print("Not Connected");
+    }
   }
 
   void SendMessage() {
-    _socket!.add(utf8.encode(
-        "<${widget.name}>: ${_msgController.text}")); //llama al socket para  encriptar el mensaje
+    Message msg = Message(widget.senderNum, widget.targetNum, _msgController.text);
+    String jsonMsg = jsonEncode(msg);
+
+    _socket!.add(utf8.encode(jsonMsg)); //llama al socket para  encriptar el mensaje
     setState(() {
-      listMsg.add(
-          "<${widget.name}>: ${_msgController.text}"); //manda el mensaje a la lista para verlo en pantalla
+      listMsg
+          .add(msg.data); //manda el mensaje a la lista para verlo en pantalla
     });
     _socket!.flush(); //necesario? (limpia cache/buffer del metodo)
     _msgController.clear();
@@ -69,11 +91,6 @@ class _GroupPageState extends State<GroupPage> {
       ),
       body: Column(
         children: [
-          IconButton(
-            onPressed: connectServer,
-            icon: const Icon(Icons.computer),
-          ),
-          Text(_conectecController.text),
           Expanded(
             child: ListView.builder(
               itemCount: listMsg.length,
@@ -136,8 +153,38 @@ class _GroupPageState extends State<GroupPage> {
       for (PlatformFile file in files) {
         List<int> bytes = await File(file.path!)
             .readAsBytes(); // Lee el archivo y obtiene los bytes
-        _socket!.add(bytes);
+
+        Message msg = Message(widget.senderNum, widget.targetNum, bytes.toString());
+        String jsonMsg = jsonEncode(msg);
+
+        if(jsonMsg.length > 2018)
+        {
+
+        }
+
+        _socket!.add(utf8.encode(jsonMsg));
       }
     }
   }
+}
+
+class Message {
+  final String senderNumber;
+  final String targetNumber;
+  //final int type;
+  //final int offset;
+  final String data;
+
+  Message(this.senderNumber, this.targetNumber, this.data);
+
+  Message.fromJson(Map<String, dynamic> json)
+      : senderNumber = json['senderNumber'],
+        targetNumber = json['targetNumber'],
+        data = json['data'];
+
+  Map<String, dynamic> toJson() => {
+        'senderNumber': senderNumber,
+        'targetNumber': targetNumber,
+        'data': data
+      };
 }
