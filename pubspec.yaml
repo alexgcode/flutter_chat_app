@@ -40,6 +40,10 @@ dependencies:
   web_socket_channel: ^2.4.0
   tcp_socket_connection: ^0.3.1
   file_picker: ^5.3.2
+  path_provider: ^2.0.15
+  image_gallery_saver: ^2.0.3
+  permission_handler: ^10.4.3
+  dio: ^5.2.1+1
 
 dev_dependencies:
   flutter_test:

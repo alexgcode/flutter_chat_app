@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
+import 'package:path_provider/path_provider.dart';
 
 class GroupPage extends StatefulWidget {
   final String name;
@@ -32,6 +33,8 @@ class _GroupPageState extends State<GroupPage> {
   String message = ""; //definimos mensaje
   bool isConnecting = false; //no esta conectado
   List<String> listMsg = [];
+  File file = new File("/file_01.tmp");
+  List<int> tempFileBytes = [];
 
   @override
   void initState() {
@@ -43,6 +46,8 @@ class _GroupPageState extends State<GroupPage> {
     });
 
     connectServer();
+
+    writeCounter(5);
   }
 
   Future<void> connectServer() async {
@@ -56,9 +61,19 @@ class _GroupPageState extends State<GroupPage> {
         Map<String, dynamic> messageMap = jsonDecode(rawString);
         Message msg = Message.fromJson(messageMap);
 
+        
+        if(msg.type == 2)
+        {
+          readCounter();
+          file.writeAsBytes(utf8.encode(msg.data));
+          writeCounter(25);
+          print("mensaje tipo 2");
+        }
+        
+
         setState(() {
           listMsg.add(msg.data);
-          print(msg.data);
+          //print(msg.data);
         });
         
 
@@ -70,8 +85,40 @@ class _GroupPageState extends State<GroupPage> {
     }
   }
 
+  Future<String> get _localPath async {
+    final directory = await getApplicationDocumentsDirectory();
+
+    return directory.path;
+  }
+
+  Future<File> get _localFile async {
+    final path = await _localPath;
+    return File('$path/counter.txt');
+  }
+
+  Future<int> readCounter() async {
+    try {
+      final file = await _localFile;
+
+      // Read the file
+      final contents = await file.readAsString();
+
+      return int.parse(contents);
+    } catch (e) {
+      // If encountering an error, return 0
+      return 0;
+    }
+  }
+
+  Future<File> writeCounter(int counter) async {
+    final file = await _localFile;
+
+    // Write the file
+    return file.writeAsString('$counter');
+  }
+
   void SendMessage() {
-    Message msg = Message(widget.senderNum, widget.targetNum, _msgController.text);
+    Message msg = Message(widget.senderNum, widget.targetNum, _msgController.text, 1, -1, -1);
     String jsonMsg = jsonEncode(msg);
 
     _socket!.add(utf8.encode(jsonMsg)); //llama al socket para  encriptar el mensaje
@@ -154,13 +201,8 @@ class _GroupPageState extends State<GroupPage> {
         List<int> bytes = await File(file.path!)
             .readAsBytes(); // Lee el archivo y obtiene los bytes
 
-        Message msg = Message(widget.senderNum, widget.targetNum, bytes.toString());
+        Message msg = Message(widget.senderNum, widget.targetNum, bytes.toString(), 2,-1,-1);
         String jsonMsg = jsonEncode(msg);
-
-        if(jsonMsg.length > 2018)
-        {
-
-        }
 
         _socket!.add(utf8.encode(jsonMsg));
       }
@@ -171,20 +213,28 @@ class _GroupPageState extends State<GroupPage> {
 class Message {
   final String senderNumber;
   final String targetNumber;
-  //final int type;
-  //final int offset;
   final String data;
+  final int type;
+  final int offset;
+  final int part;
 
-  Message(this.senderNumber, this.targetNumber, this.data);
+  Message(this.senderNumber, this.targetNumber, this.data, this.type, this.offset, this.part);
 
   Message.fromJson(Map<String, dynamic> json)
       : senderNumber = json['senderNumber'],
         targetNumber = json['targetNumber'],
+        type = json['type'],
+        offset = json['offset'],
+        part = json['part'],
         data = json['data'];
 
   Map<String, dynamic> toJson() => {
         'senderNumber': senderNumber,
         'targetNumber': targetNumber,
+        'type': type,
+        'offset': offset,
+        'part': part,
         'data': data
       };
 }
+
