@@ -44,6 +44,9 @@ dependencies:
   image_gallery_saver: ^2.0.3
   permission_handler: ^10.4.3
   dio: ^5.2.1+1
+  gallery_saver: ^2.3.2
+  open_file: ^3.3.2
+  quiver: ^3.2.1
 
 dev_dependencies:
   flutter_test:

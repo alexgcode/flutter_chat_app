@@ -148,14 +148,12 @@ class _IniPageState extends State<IniPage> {
               ? null
               : () {
                     String name = _nameController.text;
-                    String ip = _ipController.text;
-                    String port = _portController.text;
                     String senderNum = widget.num;
                     String targetNum = connection.number;
 
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => GroupPage(name: name, ip: ip, port: port, senderNum: senderNum, targetNum:targetNum)),
+                    MaterialPageRoute(builder: (context) => GroupPage(name: name, ip: widget.ip, port: widget.port, senderNum: senderNum, targetNum:targetNum)),
                   );
                 },
         );
