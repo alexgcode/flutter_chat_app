@@ -90,6 +90,7 @@ class _GroupPageState extends State<GroupPage> {
         {
           if(msg.part == -1){
             fileBytes = [];
+            filePath = "";
           }
         
           setState(() {
