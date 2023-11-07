@@ -1,6 +1,6 @@
 # flutter_chat_app
 
-La Chat App es una aplicación de chat diseñada para el público en general. Con esta app, puedes comunicarte de forma rápida y sencilla con amigos, familiares y colegas a través de mensajes de texto en tiempo real. La Chat App te permite crear grupos de chat para conversar con varias personas al mismo tiempo, lo que facilita la comunicación y la coordinación de actividades.
+Chat App es una aplicación de chat diseñada para el público en general. Con esta app, puedes comunicarte de forma rápida y sencilla con amigos, familiares y colegas a través de mensajes de texto en tiempo real. La Chat App te permite crear grupos de chat para conversar con varias personas al mismo tiempo, lo que facilita la comunicación y la coordinación de actividades.
 
 ## Getting Started
 
